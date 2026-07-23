@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { GroupDashboard } from '@/components/dashboard/GroupDashboard';
 import { RecentMovements } from '@/components/dashboard/RecentMovements';
@@ -24,10 +25,10 @@ const GroupDashboardPage = () => {
   const hasFilters = searchQuery.trim() !== '' || statusFilter !== 'all';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
-      <main className="container px-4 py-6">
+      <main className="container flex-1 px-4 py-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,6 +111,8 @@ const GroupDashboardPage = () => {
           <RecentMovements groupId={groupId} />
         </motion.div>
       </main>
+
+      <Footer />
     </div>
   );
 };

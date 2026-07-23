@@ -100,7 +100,7 @@ export function MovementsManager() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-semibold">Movimentações</h3>
         <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 sm:flex-initial">
+          <div className="relative w-full flex-1 sm:w-auto sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar por produto..."
@@ -110,7 +110,7 @@ export function MovementsManager() {
             />
           </div>
           <Select value={filterType} onValueChange={(value: typeof filterType) => setFilterType(value)}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -120,7 +120,7 @@ export function MovementsManager() {
             </SelectContent>
           </Select>
           <Select value={filterProduct} onValueChange={setFilterProduct}>
-            <SelectTrigger className="w-[220px]">
+            <SelectTrigger className="w-full sm:w-[220px]">
               <SelectValue placeholder="Produto" />
             </SelectTrigger>
             <SelectContent>
@@ -135,7 +135,7 @@ export function MovementsManager() {
             </SelectContent>
           </Select>
           <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>

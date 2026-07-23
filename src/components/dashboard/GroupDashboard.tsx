@@ -91,8 +91,8 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
             className="rounded-2xl border bg-card overflow-hidden"
           >
             {/* Header do Grupo */}
-            <div 
-              className="p-4 border-b flex items-center gap-3"
+            <div
+              className="p-4 border-b flex flex-wrap items-center gap-3"
               style={{ backgroundColor: `${group.color}15` }}
             >
               <div 

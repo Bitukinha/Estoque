@@ -468,7 +468,7 @@ export function ProductsTable() {
         <h3 className="text-lg font-semibold">Produtos</h3>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 sm:flex-initial">
+          <div className="relative w-full flex-1 sm:w-auto sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar produto..."
@@ -490,7 +490,7 @@ export function ProductsTable() {
 
           {/* Group filter */}
           <Select value={filterGroup} onValueChange={setFilterGroup}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filtrar por grupo" />
             </SelectTrigger>
             <SelectContent>
@@ -526,7 +526,7 @@ export function ProductsTable() {
                   <DialogTitle>{editingProduct ? 'Editar Produto' : 'Adicionar Produto'}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="space-y-2">
                       <Label htmlFor="productCode">Código</Label>
                       <Input
@@ -544,7 +544,7 @@ export function ProductsTable() {
                         <p className="text-xs text-destructive">{codeError}</p>
                       )}
                     </div>
-                    <div className="col-span-2 space-y-2">
+                    <div className="space-y-2 sm:col-span-2">
                       <Label htmlFor="productName">Nome do Produto</Label>
                       <Input
                         id="productName"

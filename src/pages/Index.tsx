@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Header } from '@/components/layout/Header';
 import { Navigation } from '@/components/layout/Navigation';
+import { Footer } from '@/components/layout/Footer';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentMovements } from '@/components/dashboard/RecentMovements';
 import { GroupDashboard } from '@/components/dashboard/GroupDashboard';
@@ -22,10 +23,10 @@ const Index = () => {
   const { groups } = useInventoryData();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      
-      <main className="container px-4 py-6">
+
+      <main className="container flex-1 px-4 py-6">
         <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
         
         <AnimatePresence mode="wait">
@@ -93,6 +94,8 @@ const Index = () => {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <Footer />
     </div>
   );
 };
