@@ -10,11 +10,23 @@ import { cn } from '@/lib/utils';
 
 const groupColors = [
   { name: 'Verde', value: '#22c55e' },
+  { name: 'Esmeralda', value: '#10b981' },
+  { name: 'Lima', value: '#84cc16' },
   { name: 'Amarelo', value: '#eab308' },
-  { name: 'Azul', value: '#3b82f6' },
+  { name: 'Âmbar', value: '#f59e0b' },
+  { name: 'Laranja', value: '#f97316' },
   { name: 'Vermelho', value: '#ef4444' },
-  { name: 'Roxo', value: '#8b5cf6' },
+  { name: 'Rosa', value: '#f43f5e' },
+  { name: 'Pink', value: '#ec4899' },
+  { name: 'Fúcsia', value: '#d946ef' },
+  { name: 'Roxo', value: '#a855f7' },
+  { name: 'Violeta', value: '#8b5cf6' },
+  { name: 'Índigo', value: '#6366f1' },
+  { name: 'Azul', value: '#3b82f6' },
+  { name: 'Céu', value: '#0ea5e9' },
   { name: 'Ciano', value: '#06b6d4' },
+  { name: 'Teal', value: '#14b8a6' },
+  { name: 'Cinza', value: '#64748b' },
 ];
 
 export function GroupsManager() {
@@ -99,10 +111,11 @@ export function GroupsManager() {
                 </div>
                 <div className="space-y-2">
                   <Label>Cor do Grupo</Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {groupColors.map((color) => (
                       <button
                         key={color.value}
+                        type="button"
                         onClick={() => setSelectedColor(color.value)}
                         className={cn(
                           'h-8 w-8 rounded-full transition-all',
