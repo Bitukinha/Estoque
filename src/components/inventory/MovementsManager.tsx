@@ -32,17 +32,24 @@ export function MovementsManager() {
     notes: '',
     company: ''
   });
+  const [bagCount, setBagCount] = useState(0);
 
   const resetForm = () => {
     setFormData({ product_id: '', type: 'entrada', quantity: 0, notes: '', company: '' });
+    setBagCount(0);
   };
 
+  const selectedProduct = products.find(p => p.id === formData.product_id);
+  const usesBagCount = !!selectedProduct?.bag_weight;
+  const computedWeight = usesBagCount ? Math.round(bagCount * (selectedProduct!.bag_weight as number)) : 0;
+  const effectiveQuantity = usesBagCount ? computedWeight : formData.quantity;
+
   const handleSubmit = () => {
-    if (formData.product_id && formData.quantity > 0) {
+    if (formData.product_id && effectiveQuantity > 0) {
       addMovement({
         product_id: formData.product_id,
         type: formData.type,
-        quantity: formData.quantity,
+        quantity: effectiveQuantity,
         notes: formData.notes || undefined,
         company: formData.company || undefined,
       });
@@ -182,7 +189,13 @@ export function MovementsManager() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="movementProduct">Produto</Label>
-                    <Select value={formData.product_id} onValueChange={(value) => setFormData({ ...formData, product_id: value })}>
+                    <Select
+                      value={formData.product_id}
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, product_id: value, quantity: 0 });
+                        setBagCount(0);
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um produto" />
                       </SelectTrigger>
@@ -190,22 +203,40 @@ export function MovementsManager() {
                         {products.map(product => (
                           <SelectItem key={product.id} value={product.id}>
                             {product.name} ({formatStock(product.current_stock, product.unit)})
+                            {product.bag_weight ? ` — saco de ${product.bag_weight.toLocaleString('pt-BR')} kg` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="movementQuantity">Quantidade</Label>
-                    <Input
-                      id="movementQuantity"
-                      type="number"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                      placeholder="0"
-                    />
-                  </div>
+                  {usesBagCount ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="movementBagCount">Quantidade de Sacos</Label>
+                      <Input
+                        id="movementBagCount"
+                        type="number"
+                        min={0}
+                        value={bagCount}
+                        onChange={(e) => setBagCount(Number(e.target.value))}
+                        placeholder="0"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Peso total: {computedWeight.toLocaleString('pt-BR')} kg (saco de {selectedProduct!.bag_weight!.toLocaleString('pt-BR')} kg)
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="movementQuantity">Quantidade</Label>
+                      <Input
+                        id="movementQuantity"
+                        type="number"
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
+                        placeholder="0"
+                      />
+                    </div>
+                  )}
 
                   {formData.type === 'entrada' && (
                     <div className="space-y-2">

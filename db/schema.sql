@@ -16,8 +16,12 @@ CREATE TABLE IF NOT EXISTS products (
     unit TEXT NOT NULL DEFAULT 'unidade',
     current_stock INTEGER NOT NULL DEFAULT 0,
     min_stock INTEGER DEFAULT 0,
+    bag_weight NUMERIC,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Upgrade existing databases that were created before bag_weight existed
+ALTER TABLE products ADD COLUMN IF NOT EXISTS bag_weight NUMERIC;
 
 CREATE TABLE IF NOT EXISTS stock_movements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

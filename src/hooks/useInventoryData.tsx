@@ -17,6 +17,7 @@ export interface Product {
   unit: string;
   current_stock: number;
   min_stock: number | null;
+  bag_weight: number | null;
   created_at: string;
 }
 
@@ -110,6 +111,7 @@ export function useInventoryData() {
     unit: string;
     current_stock: number;
     min_stock?: number;
+    bag_weight?: number | null;
   }) => {
     try {
       const data = await api<Product>('/api/products', {

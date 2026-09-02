@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '../_db.js';
 
-const ALLOWED_FIELDS = ['group_id', 'code', 'name', 'unit', 'current_stock', 'min_stock'];
+const ALLOWED_FIELDS = ['group_id', 'code', 'name', 'unit', 'current_stock', 'min_stock', 'bag_weight'];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const db = sql();
@@ -20,13 +20,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'POST') {
-    const { group_id, code, name, unit, current_stock, min_stock } = req.body ?? {};
+    const { group_id, code, name, unit, current_stock, min_stock, bag_weight } = req.body ?? {};
     if (!group_id || !code || !name) {
       return res.status(400).json({ error: 'group_id, code e name são obrigatórios' });
     }
     const [product] = await db`
-      INSERT INTO products (group_id, code, name, unit, current_stock, min_stock)
-      VALUES (${group_id}, ${code}, ${name}, ${unit ?? 'unidade'}, ${current_stock ?? 0}, ${min_stock ?? 0})
+      INSERT INTO products (group_id, code, name, unit, current_stock, min_stock, bag_weight)
+      VALUES (${group_id}, ${code}, ${name}, ${unit ?? 'unidade'}, ${current_stock ?? 0}, ${min_stock ?? 0}, ${bag_weight ?? null})
       RETURNING *
     `;
     return res.status(201).json(product);

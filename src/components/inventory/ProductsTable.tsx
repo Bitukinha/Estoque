@@ -298,11 +298,14 @@ export function ProductsTable() {
     group_id: '',
     unit: 'unidade',
     current_stock: 0,
-    min_stock: 0
+    min_stock: 0,
+    bag_weight: 0
   });
 
+  const isBaggedUnit = (unit: string) => unit === 'kg' || unit === 'kg/ton';
+
   const resetForm = () => {
-    setFormData({ code: '', name: '', group_id: '', unit: 'unidade', current_stock: 0, min_stock: 0 });
+    setFormData({ code: '', name: '', group_id: '', unit: 'unidade', current_stock: 0, min_stock: 0, bag_weight: 0 });
     setEditingProduct(null);
     setCodeError('');
   };
@@ -323,10 +326,15 @@ export function ProductsTable() {
       return;
     }
 
+    const payload = {
+      ...formData,
+      bag_weight: isBaggedUnit(formData.unit) && formData.bag_weight > 0 ? formData.bag_weight : null,
+    };
+
     if (editingProduct) {
-      updateProduct(editingProduct, formData);
+      updateProduct(editingProduct, payload);
     } else {
-      addProduct(formData);
+      addProduct(payload);
     }
     resetForm();
     setCodeError('');
@@ -340,7 +348,8 @@ export function ProductsTable() {
       group_id: product.group_id,
       unit: product.unit,
       current_stock: product.current_stock,
-      min_stock: product.min_stock || 0
+      min_stock: product.min_stock || 0,
+      bag_weight: product.bag_weight || 0
     });
     setEditingProduct(product.id);
     setIsDialogOpen(true);
@@ -602,6 +611,23 @@ export function ProductsTable() {
                       onChange={(e) => setFormData({ ...formData, min_stock: Number(e.target.value) })}
                     />
                   </div>
+                  {isBaggedUnit(formData.unit) && (
+                    <div className="space-y-2">
+                      <Label htmlFor="productBagWeight">Peso por Saco (kg)</Label>
+                      <Input
+                        id="productBagWeight"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={formData.bag_weight}
+                        onChange={(e) => setFormData({ ...formData, bag_weight: Number(e.target.value) })}
+                        placeholder="Ex: 25"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Preenchido, permite lançar movimentações informando a quantidade de sacos — o peso total é calculado automaticamente.
+                      </p>
+                    </div>
+                  )}
                   <Button onClick={handleSubmit} className="w-full">
                     {editingProduct ? 'Salvar Alterações' : 'Adicionar Produto'}
                   </Button>
@@ -664,7 +690,14 @@ export function ProductsTable() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-muted-foreground" />
-                        {product.name}
+                        <div>
+                          {product.name}
+                          {product.bag_weight ? (
+                            <p className="text-xs font-normal text-muted-foreground">
+                              Saco de {product.bag_weight.toLocaleString('pt-BR')} kg
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
