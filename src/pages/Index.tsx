@@ -8,6 +8,8 @@ import { Footer } from '@/components/layout/Footer';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentMovements } from '@/components/dashboard/RecentMovements';
 import { GroupDashboard } from '@/components/dashboard/GroupDashboard';
+import { PeriodFilter } from '@/components/dashboard/PeriodFilter';
+import { Period, todayPeriod } from '@/lib/period';
 import { GroupsManager } from '@/components/inventory/GroupsManager';
 import { ProductsTable } from '@/components/inventory/ProductsTable';
 import { MovementsManager } from '@/components/inventory/MovementsManager';
@@ -20,6 +22,7 @@ const Index = () => {
 
   const [showStats, setShowStats] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const [period, setPeriod] = useState<Period>(todayPeriod);
   const { groups } = useInventoryData();
 
   return (
@@ -55,6 +58,7 @@ const Index = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <PeriodFilter value={period} onChange={setPeriod} />
                   </div>
                   <Button
                     variant="ghost"
@@ -75,12 +79,12 @@ const Index = () => {
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
-                      <DashboardStats groupId={selectedGroup} />
+                      <DashboardStats groupId={selectedGroup} period={period} />
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <GroupDashboard groupId={selectedGroup} />
-                <RecentMovements groupId={selectedGroup} />
+                <GroupDashboard groupId={selectedGroup} period={period} />
+                <RecentMovements groupId={selectedGroup} period={period} />
               </div>
             )}
 

@@ -9,6 +9,8 @@ import { Footer } from '@/components/layout/Footer';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { GroupDashboard } from '@/components/dashboard/GroupDashboard';
 import { RecentMovements } from '@/components/dashboard/RecentMovements';
+import { PeriodFilter } from '@/components/dashboard/PeriodFilter';
+import { Period, todayPeriod } from '@/lib/period';
 import { useInventoryData } from '@/hooks/useInventoryData';
 import { motion } from 'framer-motion';
 
@@ -21,6 +23,7 @@ const GroupDashboardPage = () => {
   const group = groups.find((g) => g.id === groupId);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [period, setPeriod] = useState<Period>(todayPeriod);
   const [statusFilter, setStatusFilter] = useState<'all' | 'low' | 'ok' | 'empty'>('all');
   const hasFilters = searchQuery.trim() !== '' || statusFilter !== 'all';
 
@@ -64,9 +67,10 @@ const GroupDashboardPage = () => {
                 )
               )}
             </div>
+            <PeriodFilter value={period} onChange={setPeriod} />
           </div>
 
-          <DashboardStats groupId={groupId} />
+          <DashboardStats groupId={groupId} period={period} />
 
           <div className="rounded-2xl border bg-card p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -107,8 +111,8 @@ const GroupDashboardPage = () => {
             </div>
           </div>
 
-          <GroupDashboard groupId={groupId} searchQuery={searchQuery} statusFilter={statusFilter} />
-          <RecentMovements groupId={groupId} />
+          <GroupDashboard groupId={groupId} searchQuery={searchQuery} statusFilter={statusFilter} period={period} />
+          <RecentMovements groupId={groupId} period={period} />
         </motion.div>
       </main>
 

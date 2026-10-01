@@ -5,14 +5,16 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { stockInKg, stockInBags, formatKg } from '@/lib/formatStock';
+import { Period, todayPeriod, isInPeriod } from '@/lib/period';
 
 interface GroupDashboardProps {
   groupId?: string;
   searchQuery?: string;
   statusFilter?: 'all' | 'low' | 'ok' | 'empty';
+  period?: Period;
 }
 
-export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter = 'all' }: GroupDashboardProps) {
+export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter = 'all', period = todayPeriod() }: GroupDashboardProps) {
   const { products, groups: allGroups, movements, isLoading } = useInventoryData();
   const groups = groupId === 'all' ? allGroups : allGroups.filter(g => g.id === groupId);
 
@@ -42,7 +44,7 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
     const lowStockCount =groupProducts.filter(p => p.min_stock && p.current_stock < p.min_stock).length;
     
     const groupProductIds = groupProducts.map(p => p.id);
-    const groupMovements = movements.filter(m => groupProductIds.includes(m.product_id));
+    const groupMovements = movements.filter(m => groupProductIds.includes(m.product_id) && isInPeriod(m.created_at, period));
     const entries = groupMovements.filter(m => m.type === 'entrada').reduce((acc, m) => acc + m.quantity, 0);
     const exits = groupMovements.filter(m => m.type === 'saida').reduce((acc, m) => acc + m.quantity, 0);
 

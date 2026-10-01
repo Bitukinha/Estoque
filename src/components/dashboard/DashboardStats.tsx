@@ -1,21 +1,24 @@
 import { useInventoryData } from '@/hooks/useInventoryData';
 import { Package, Layers, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { StatCard } from './StatCard';
+import { Period, todayPeriod, isInPeriod, periodLabel } from '@/lib/period';
 
 interface DashboardStatsProps {
   groupId?: string; // 'all' or a group id
+  period?: Period;
 }
 
-export function DashboardStats({ groupId = 'all' }: DashboardStatsProps) {
+export function DashboardStats({ groupId = 'all', period = todayPeriod() }: DashboardStatsProps) {
   const { products: allProducts, groups, movements: allMovements, isLoading } = useInventoryData();
 
   const products = groupId === 'all'
     ? allProducts
     : allProducts.filter(p => p.group_id === groupId);
   const productIds = new Set(products.map(p => p.id));
-  const movements = groupId === 'all'
+  const groupMovements = groupId === 'all'
     ? allMovements
     : allMovements.filter(m => productIds.has(m.product_id));
+  const movements = groupMovements.filter(m => isInPeriod(m.created_at, period));
 
   const totalStock = products.reduce((acc, p) => acc + p.current_stock, 0);
   const lowStockProducts = products.filter(p => p.min_stock && p.current_stock < p.min_stock).length;
@@ -45,14 +48,14 @@ export function DashboardStats({ groupId = 'all' }: DashboardStatsProps) {
       <StatCard
         title="Estoque Total"
         value={totalStock}
-        subtitle="unidades em estoque"
+        subtitle="estoque atual"
         icon={Layers}
         variant="success"
         trend="up"
         delay={0.1}
       />
       <StatCard
-        title="Entradas (Mês)"
+        title={`Entradas (${periodLabel(period)})`}
         value={totalEntries}
         subtitle="unidades recebidas"
         icon={TrendingUp}
@@ -60,7 +63,7 @@ export function DashboardStats({ groupId = 'all' }: DashboardStatsProps) {
         delay={0.2}
       />
       <StatCard
-        title="Saídas (Mês)"
+        title={`Saídas (${periodLabel(period)})`}
         value={totalExits}
         subtitle="unidades expedidas"
         icon={TrendingDown}

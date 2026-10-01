@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useInventoryData } from '@/hooks/useInventoryData';
 import { motion } from 'framer-motion';
 import { ArrowDownCircle, ArrowUpCircle, Plus, Search } from 'lucide-react';
@@ -15,6 +15,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { formatStock, isWeightUnit } from '@/lib/formatStock';
+import { Period, todayPeriod, isInPeriod } from '@/lib/period';
+import { PeriodFilter } from '@/components/dashboard/PeriodFilter';
 
 export function MovementsManager() {
   const { movements, products, addMovement, isAdmin, isLoading } = useInventoryData();
@@ -22,7 +24,7 @@ export function MovementsManager() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'entrada' | 'saida'>('all');
   const [filterProduct, setFilterProduct] = useState<string>('all');
-  const [filterMonth, setFilterMonth] = useState<string>('all');
+  const [period, setPeriod] = useState<Period>(todayPeriod);
 
   
   const [formData, setFormData] = useState({
@@ -66,27 +68,13 @@ export function MovementsManager() {
     return products.find(p => p.id === productId)?.unit || 'un';
   };
 
-  const availableMonths = useMemo(() => {
-    const monthsSet = new Set<string>();
-    movements.forEach(m => {
-      const monthKey = format(new Date(m.created_at), 'MM/yyyy');
-      monthsSet.add(monthKey);
-    });
-    return Array.from(monthsSet).sort((a, b) => {
-      const [monthA, yearA] = a.split('/').map(Number);
-      const [monthB, yearB] = b.split('/').map(Number);
-      return yearB - yearA || monthB - monthA;
-    });
-  }, [movements]);
-
   const sortedMovements = [...movements]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .filter(m => {
       const matchesSearch = getProductName(m.product_id).toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === 'all' || m.type === filterType;
       const matchesProduct = filterProduct === 'all' || m.product_id === filterProduct;
-      const matchesMonth = filterMonth === 'all' || format(new Date(m.created_at), 'MM/yyyy') === filterMonth;
-      return matchesSearch && matchesType && matchesProduct && matchesMonth;
+      return matchesSearch && matchesType && matchesProduct && isInPeriod(m.created_at, period);
     });
 
   if (isLoading) {
@@ -141,23 +129,7 @@ export function MovementsManager() {
                 ))}
             </SelectContent>
           </Select>
-          <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os meses</SelectItem>
-              {availableMonths.map(month => {
-                const [m, y] = month.split('/');
-                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                return (
-                  <SelectItem key={month} value={month}>
-                    {monthNames[parseInt(m) - 1]} / {y}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <PeriodFilter value={period} onChange={setPeriod} allowAll />
           {isAdmin && (
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
               setIsDialogOpen(open);

@@ -5,12 +5,14 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatStock } from '@/lib/formatStock';
+import { Period, todayPeriod, isInPeriod, periodLabel } from '@/lib/period';
 
 interface RecentMovementsProps {
   groupId?: string;
+  period?: Period;
 }
 
-export function RecentMovements({ groupId = 'all' }: RecentMovementsProps) {
+export function RecentMovements({ groupId = 'all', period = todayPeriod() }: RecentMovementsProps) {
   const { movements, products, isLoading } = useInventoryData();
 
   const filteredMovements = groupId === 'all'
@@ -20,7 +22,8 @@ export function RecentMovements({ groupId = 'all' }: RecentMovementsProps) {
         return prod?.group_id === groupId;
       });
 
-  const recentMovements = [...filteredMovements]
+  const recentMovements = filteredMovements
+    .filter(m => isInPeriod(m.created_at, period))
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
@@ -46,11 +49,12 @@ export function RecentMovements({ groupId = 'all' }: RecentMovementsProps) {
       <div className="mb-4 flex items-center gap-2">
         <Clock className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-semibold">Movimentações Recentes</h3>
+        <span className="text-sm text-muted-foreground">({periodLabel(period)})</span>
       </div>
       
       <div className="space-y-3">
         {recentMovements.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma movimentação registrada</p>
+          <p className="text-sm text-muted-foreground">Nenhuma movimentação no período</p>
         ) : (
           recentMovements.map((movement, index) => (
             <motion.div
