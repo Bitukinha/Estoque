@@ -1,5 +1,5 @@
 import { useInventoryData } from '@/hooks/useInventoryData';
-import { Package, Layers, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Package, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { StatCard } from './StatCard';
 import { Period, todayPeriod, isInPeriod, periodLabel } from '@/lib/period';
 
@@ -20,15 +20,14 @@ export function DashboardStats({ groupId = 'all', period = todayPeriod() }: Dash
     : allMovements.filter(m => productIds.has(m.product_id));
   const movements = groupMovements.filter(m => isInPeriod(m.created_at, period));
 
-  const totalStock = products.reduce((acc, p) => acc + p.current_stock, 0);
   const lowStockProducts = products.filter(p => p.min_stock && p.current_stock < p.min_stock).length;
   const totalEntries = movements.filter(m => m.type === 'entrada').reduce((acc, m) => acc + m.quantity, 0);
   const totalExits = movements.filter(m => m.type === 'saida').reduce((acc, m) => acc + m.quantity, 0);
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
           <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
         ))}
       </div>
@@ -36,7 +35,7 @@ export function DashboardStats({ groupId = 'all', period = todayPeriod() }: Dash
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className={lowStockProducts > 0 ? "grid gap-4 md:grid-cols-2 lg:grid-cols-4" : "grid gap-4 md:grid-cols-3"}>
       <StatCard
         title="Total de Produtos"
         value={products.length}
@@ -46,21 +45,12 @@ export function DashboardStats({ groupId = 'all', period = todayPeriod() }: Dash
         delay={0}
       />
       <StatCard
-        title="Estoque Total"
-        value={totalStock}
-        subtitle="estoque atual"
-        icon={Layers}
-        variant="success"
-        trend="up"
-        delay={0.1}
-      />
-      <StatCard
         title={`Entradas (${periodLabel(period)})`}
         value={totalEntries}
         subtitle="unidades recebidas"
         icon={TrendingUp}
         variant="success"
-        delay={0.2}
+        delay={0.1}
       />
       <StatCard
         title={`Saídas (${periodLabel(period)})`}
@@ -68,7 +58,7 @@ export function DashboardStats({ groupId = 'all', period = todayPeriod() }: Dash
         subtitle="unidades expedidas"
         icon={TrendingDown}
         variant="warning"
-        delay={0.3}
+        delay={0.2}
       />
       {lowStockProducts > 0 && (
         <StatCard
@@ -77,7 +67,7 @@ export function DashboardStats({ groupId = 'all', period = todayPeriod() }: Dash
           subtitle="produtos abaixo do mínimo"
           icon={AlertTriangle}
           variant="danger"
-          delay={0.4}
+          delay={0.3}
         />
       )}
     </div>
