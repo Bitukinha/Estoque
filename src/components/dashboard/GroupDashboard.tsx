@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, AlertTriangle, Layers, ExternalLink, XCircle 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { stockInKg, stockInBags, formatKg } from '@/lib/formatStock';
 
 interface GroupDashboardProps {
   groupId?: string;
@@ -35,7 +36,10 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
         return true;
       });
     const totalStock = groupProducts.reduce((acc, p) => acc + p.current_stock, 0);
-    const lowStockCount = groupProducts.filter(p => p.min_stock && p.current_stock < p.min_stock).length;
+    const weighed = groupProducts.map(stockInKg);
+    const totalKg = weighed.reduce<number>((acc, kg) => acc + (kg ?? 0), 0);
+    const missingWeightCount = weighed.filter(kg => kg === null).length;
+    const lowStockCount =groupProducts.filter(p => p.min_stock && p.current_stock < p.min_stock).length;
     
     const groupProductIds = groupProducts.map(p => p.id);
     const groupMovements = movements.filter(m => groupProductIds.includes(m.product_id));
@@ -48,12 +52,16 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
       .map(p => ({
         name: p.name.length > 10 ? p.name.substring(0, 10) + '...' : p.name,
         estoque: p.current_stock,
-        minimo: p.min_stock || 0
+        minimo: p.min_stock || 0,
+        unit: p.unit,
+        kg: stockInKg(p)
       }));
 
-    return { 
-      products: groupProducts, 
-      totalStock, 
+    return {
+      products: groupProducts,
+      totalStock,
+      totalKg,
+      missingWeightCount,
       lowStockCount, 
       entries, 
       exits, 
@@ -126,6 +134,12 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
                   <div>
                     <p className="text-sm text-muted-foreground">Estoque Total</p>
                     <p className="text-2xl font-bold">{stats.totalStock.toLocaleString('pt-BR')}</p>
+                    {stats.missingWeightCount < stats.products.length && (
+                      <p className="text-xs text-muted-foreground">
+                        {formatKg(stats.totalKg)}
+                        {stats.missingWeightCount > 0 && ` · ${stats.missingWeightCount} sem peso`}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -186,7 +200,11 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
                         <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(v) => v.toLocaleString('pt-BR')} />
                         <YAxis dataKey="name" type="category" width={70} stroke="hsl(var(--muted-foreground))" fontSize={10} />
                         <Tooltip 
-                          formatter={(value: number) => value.toLocaleString('pt-BR') + ' un'}
+                          formatter={(value: number, name: string, item: { payload?: { unit: string; kg: number | null } }) => {
+                            const label = `${value.toLocaleString('pt-BR')} ${item.payload?.unit ?? 'un'}`;
+                            if (name !== 'Atual' || item.payload?.kg == null || item.payload.unit === 'kg') return label;
+                            return `${label} (${formatKg(item.payload.kg)})`;
+                          }}
                           contentStyle={{ 
                             backgroundColor: 'hsl(var(--card))', 
                             borderColor: 'hsl(var(--border))',
@@ -212,7 +230,16 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
                     {stats.products.length > 0 ? (
                       stats.products.map((product, index) => {
                         const isEmpty = product.current_stock <= 0;
-                        const isLow = !isEmpty && product.min_stock && product.current_stock < product.min_stock;
+                        const isLow = !isEmpty && !!product.min_stock && product.current_stock < product.min_stock;
+                        const kg = stockInKg(product);
+                        const bags = stockInBags(product);
+                        const secondary = isEmpty
+                          ? null
+                          : bags !== null
+                          ? `${bags.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} sc`
+                          : kg !== null && product.unit !== 'kg/ton'
+                          ? formatKg(kg)
+                          : null;
                         return (
                           <motion.div
                             key={product.id}
@@ -254,9 +281,12 @@ export function GroupDashboard({ groupId = 'all', searchQuery = '', statusFilter
                               )}>
                                 {product.unit === 'kg/ton' 
                                   ? `${product.current_stock.toLocaleString('pt-BR')} kg / ${(product.current_stock / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ton`
-                                  : product.current_stock.toLocaleString('pt-BR')
+                                  : `${product.current_stock.toLocaleString('pt-BR')}${product.unit === 'kg' ? ' kg' : ''}`
                                 }
                               </span>
+                              {secondary && (
+                                <span className="text-muted-foreground text-xs">({secondary})</span>
+                              )}
                               <span className="text-muted-foreground text-xs">
                                 / {product.min_stock?.toLocaleString('pt-BR') || '-'}
                               </span>

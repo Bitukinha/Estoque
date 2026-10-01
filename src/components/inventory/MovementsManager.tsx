@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { formatStock } from '@/lib/formatStock';
+import { formatStock, isWeightUnit } from '@/lib/formatStock';
 
 export function MovementsManager() {
   const { movements, products, addMovement, isAdmin, isLoading } = useInventoryData();
@@ -40,7 +40,7 @@ export function MovementsManager() {
   };
 
   const selectedProduct = products.find(p => p.id === formData.product_id);
-  const usesBagCount = !!selectedProduct?.bag_weight;
+  const usesBagCount = !!selectedProduct?.bag_weight && isWeightUnit(selectedProduct.unit);
   const computedWeight = usesBagCount ? Math.round(bagCount * (selectedProduct!.bag_weight as number)) : 0;
   const effectiveQuantity = usesBagCount ? computedWeight : formData.quantity;
 
@@ -203,7 +203,7 @@ export function MovementsManager() {
                         {products.map(product => (
                           <SelectItem key={product.id} value={product.id}>
                             {product.name} ({formatStock(product.current_stock, product.unit)})
-                            {product.bag_weight ? ` — saco de ${product.bag_weight.toLocaleString('pt-BR')} kg` : ''}
+                            {product.bag_weight ? ` — ${product.unit === 'bag' ? 'bag' : 'saco'} de ${product.bag_weight.toLocaleString('pt-BR')} kg` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>

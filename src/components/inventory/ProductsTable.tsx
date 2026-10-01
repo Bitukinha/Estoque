@@ -21,7 +21,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatStock } from '@/lib/formatStock';
+import { formatStock, isWeightUnit } from '@/lib/formatStock';
 import type { Product, StockMovement, ProductGroup } from '@/hooks/useInventoryData';
 
 type SortField = 'code' | 'name' | 'group' | 'current_stock' | 'min_stock' | 'status';
@@ -291,6 +291,7 @@ export function ProductsTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [codeError, setCodeError] = useState('');
+  const [weightError, setWeightError] = useState('');
   
   const [formData, setFormData] = useState({
     code: '',
@@ -302,12 +303,14 @@ export function ProductsTable() {
     bag_weight: 0
   });
 
-  const isBaggedUnit = (unit: string) => unit === 'kg' || unit === 'kg/ton';
+  const isBaggedUnit = (unit: string) => isWeightUnit(unit) || unit === 'bag';
+  const requiresBagWeight = (unit: string) => unit === 'bag' || unit === 'kg';
 
   const resetForm = () => {
     setFormData({ code: '', name: '', group_id: '', unit: 'unidade', current_stock: 0, min_stock: 0, bag_weight: 0 });
     setEditingProduct(null);
     setCodeError('');
+    setWeightError('');
   };
 
   const isCodeDuplicate = (code: string) => {
@@ -316,13 +319,19 @@ export function ProductsTable() {
 
   const handleSubmit = () => {
     setCodeError('');
-    
+    setWeightError('');
+
     if (!formData.code.trim() || !formData.name.trim() || !formData.group_id) {
       return;
     }
 
     if (isCodeDuplicate(formData.code)) {
       setCodeError('Este código já está em uso por outro produto');
+      return;
+    }
+
+    if (requiresBagWeight(formData.unit) && !(formData.bag_weight > 0)) {
+      setWeightError(`Informe o peso por ${formData.unit === 'bag' ? 'bag' : 'saco'} em kg`);
       return;
     }
 
@@ -342,6 +351,7 @@ export function ProductsTable() {
   };
 
   const openEditDialog = (product: typeof products[0]) => {
+    setWeightError('');
     setFormData({
       code: product.code,
       name: product.name,
@@ -613,18 +623,30 @@ export function ProductsTable() {
                   </div>
                   {isBaggedUnit(formData.unit) && (
                     <div className="space-y-2">
-                      <Label htmlFor="productBagWeight">Peso por Saco (kg)</Label>
+                      <Label htmlFor="productBagWeight">
+                        {formData.unit === 'bag' ? 'Peso por Bag (kg)' : 'Peso por Saco (kg)'}
+                        {requiresBagWeight(formData.unit) && <span className="text-destructive"> *</span>}
+                      </Label>
                       <Input
                         id="productBagWeight"
                         type="number"
                         min={0}
                         step="0.01"
                         value={formData.bag_weight}
-                        onChange={(e) => setFormData({ ...formData, bag_weight: Number(e.target.value) })}
-                        placeholder="Ex: 25"
+                        onChange={(e) => {
+                          setFormData({ ...formData, bag_weight: Number(e.target.value) });
+                          setWeightError('');
+                        }}
+                        placeholder={formData.unit === 'bag' ? 'Ex: 1000' : 'Ex: 25'}
+                        className={weightError ? 'border-destructive' : ''}
                       />
+                      {weightError && (
+                        <p className="text-xs text-destructive">{weightError}</p>
+                      )}
                       <p className="text-xs text-muted-foreground">
-                        Preenchido, permite lançar movimentações informando a quantidade de sacos — o peso total é calculado automaticamente.
+                        {formData.unit === 'bag'
+                          ? 'Usado para mostrar o estoque também em kg no dashboard.'
+                          : 'Preenchido, permite lançar movimentações informando a quantidade de sacos — o peso total é calculado automaticamente.'}
                       </p>
                     </div>
                   )}
@@ -694,7 +716,7 @@ export function ProductsTable() {
                           {product.name}
                           {product.bag_weight ? (
                             <p className="text-xs font-normal text-muted-foreground">
-                              Saco de {product.bag_weight.toLocaleString('pt-BR')} kg
+                              {product.unit === 'bag' ? 'Bag' : 'Saco'} de {product.bag_weight.toLocaleString('pt-BR')} kg
                             </p>
                           ) : null}
                         </div>
